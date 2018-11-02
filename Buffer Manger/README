@@ -1,0 +1,58 @@
+Your assignment is to implement a B+ Tree index. This B+ Tree will be simplified in certain ways:
+
+1. You can assume that all records in a file have the same length (so for a given attribute its offset in the record is always the same).
+2. The B+ Tree only needs to support single-attribute indexing (not composite attribute).
+3. The indexed attribute may be only one data type: integer.
+4. You may assume that we never insert two data entries into the index with the same key value. The last part simplifies the B+ Tree implementation (think about why,
+and put that in your report).
+
+The index will be built directly on top of the I/O Layer (the BlobFile and the Page
+classes). An index will need to store its data in a file on disk, and the file will need a name
+(so that the DB class can identify it). The convention for naming an index file is specified
+below. To create a disk image of the index file, you simply use the BlobFile constructor
+with the name of the index file. The file that you create is a “raw” file, i.e., it has no page
+structure on top of it. You will need to implement a structure on top of the pages that you
+get from the I/O Layer to implement the nodes of the B+ Tree. Note the PageFile class
+that we provide superimposes a page structure on the “raw” page. Just as the File class
+uses the first page as a header page to store the metadata for that file, you will dedicate a
+header page for the B+ Tree file too for storing metadata of the index.
+We’ll start you off with an interface for a class, BTreeIndex. You will need to implement
+the methods of this interface as described below. You may add new public methods
+to this class if required, but you should not modify the interfaces that are described here:
+
+• BTreeIndex
+The constructor first checks if the specified index file exists. And index file name
+is constructed by concatenating the relational name with the offset of the attribute
+over which the index is built. The general form of the index file name is as follows:
+relName.attrOffset.
+
+• ~BTreeIndex
+The destructor. Perform any cleanup that may be necessary, including clearing up
+any state variables, unpinning any B+ Tree pages that are pinned, and flushing the
+index file (by calling bufMgr->flushFile()). Note that this method does not
+delete the index file! But, deletion of the file object is required, which will call the
+destructor of File class causing the index file to be closed.
+
+• insertEntry
+This method inserts a new entry into the index using the pair <key, rid>.
+
+• startScan
+This method is used to begin a “filtered scan” of the index. For example, if the
+method is called using arguments (1,GT,100,LTE), then the scan should seek all
+entries greater than 1 and less than or equal to 100.
+
+• scanNext
+This method fetches the record id of the next tuple that matches the scan criteria.
+If the scan has reached the end, then it should throw the following exception:
+IndexScanCompletedException. For instance, if there are two data entries
+that need to be returned in a scan, then the third call to scanNext must throw
+IndexScanCompletedException. A leaf page that has been read into the buffer
+pool for the purpose of scanning, should not be unpinned from buffer pool unless
+all records from it are read or the scan has reached its end. Use the right sibling
+page number value from the current leaf to move on to the next leaf which holds
+successive key values for the scan.
+
+• endScan
+This method terminates the current scan and unpins all the pages that have been
+pinned for the purpose of the scan. It throws ScanNotInitializedException
+when called before a successful startScan call.
